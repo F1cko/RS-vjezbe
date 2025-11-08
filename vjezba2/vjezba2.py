@@ -69,19 +69,19 @@ def pronadi_pozivni(nacionalni_broj: str):
     svi_prefiksi.sort(key=len, reverse=True)
     for prefiks in svi_prefiksi:
         if nacionalni_broj.startswith(prefiks):
-            if prefiks in fiksne:  return prefiks, "fiksna mreža", fiksne[prefiks], None
-            if prefiks in mobilne: return prefiks, "mobilna mreža", None, mobilne[prefiks]
-            if prefiks in posebne: return prefiks, "posebne usluge", None, None
-    return None, None, None, None
+            if prefiks in fiksne:  return prefiks, "fiksna mreža",  fiksne[prefiks], None,            None
+            if prefiks in mobilne: return prefiks, "mobilna mreža", None,            mobilne[prefiks], None
+            if prefiks in posebne: return prefiks, "posebne usluge", None,           None,             posebne[prefiks]
+    return None, None, None, None, None
 
 def validiraj(broj_telefona: str) -> dict:
     nacionalni_broj = u_nacionalni(broj_telefona)
-    pozivni_broj, vrsta_mreze, mjesto, operater = pronadi_pozivni(nacionalni_broj)
+    pozivni_broj, vrsta_mreze, mjesto, operater, usluga = pronadi_pozivni(nacionalni_broj)
     if pozivni_broj is None:
-        return {"pozivni_broj": None, "broj_ostatak": None, "vrsta": None, "mjesto": None, "operater": None, "validan": False}
+        return {"pozivni_broj": None, "broj_ostatak": None, "vrsta": None, "mjesto": None, "operater": None, "usluga": None, "validan": False}
     ostatak_broja = nacionalni_broj[len(pozivni_broj):]
     if not samo_brojevi(ostatak_broja):
-        return {"pozivni_broj": pozivni_broj, "broj_ostatak": None, "vrsta": vrsta_mreze, "mjesto": mjesto, "operater": operater, "validan": False}
+        return {"pozivni_broj": pozivni_broj, "broj_ostatak": None, "vrsta": vrsta_mreze, "mjesto": mjesto, "operater": operater, "usluga": usluga if vrsta_mreze=="posebne usluge" else None, "validan": False}
     if vrsta_mreze in ("fiksna mreža", "mobilna mreža"):
         ispravna_duljina = len(ostatak_broja) in (6, 7)
     else:
@@ -92,6 +92,7 @@ def validiraj(broj_telefona: str) -> dict:
         "vrsta": vrsta_mreze,
         "mjesto": mjesto if vrsta_mreze == "fiksna mreža" else None,
         "operater": operater if vrsta_mreze == "mobilna mreža" else None,
+        "usluga": usluga if vrsta_mreze == "posebne usluge" else None,
         "validan": ispravna_duljina,
     }
 
