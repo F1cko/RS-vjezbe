@@ -1,20 +1,25 @@
-broj = input("Unesi broj telefona: ").strip()
+unos_broja = input("Unesi broj telefona: ").strip()
 
-def ocisti(b: str) -> str:
-    doz = "+0123456789"
-    return "".join(ch for ch in b if ch in doz)
+def ocisti_broj(tekst_broja: str) -> str:
+    dozvoljeni_znakovi = "+0123456789"
+    return "".join(znak for znak in tekst_broja if znak in dozvoljeni_znakovi)
 
-def norm(b: str) -> str:
-    b = ocisti(b)
-    if b.startswith("+"): b = b[1:]
-    if b.startswith("00385"):
-        b = b[5:];  b = b if b.startswith("0") else "0"+b
-    elif b.startswith("385"):
-        b = b[3:];  b = b if b.startswith("0") else "0"+b
-    return b
+def u_nacionalni(oblik_broja: str) -> str:
+    broj = ocisti_broj(oblik_broja)
+    if broj.startswith("+"):
+        broj = broj[1:]
+    if broj.startswith("00385"):
+        broj = broj[5:]
+        if not broj.startswith("0"):
+            broj = "0" + broj
+    elif broj.startswith("385"):
+        broj = broj[3:]
+        if not broj.startswith("0"):
+            broj = "0" + broj
+    return broj
 
 def rjecnik():
-    fiks = {
+    fiksne = {
         "01": "Grad Zagreb i Zagrebačka županija",
         "020": "Dubrovačko-neretvanska županija",
         "021": "Splitsko-dalmatinska županija",
@@ -36,7 +41,7 @@ def rjecnik():
         "052": "Istarska županija",
         "053": "Ličko-senjska županija",
     }
-    mob = {
+    mobilne = {
         "091": "A1 Hrvatska",
         "092": "Tomato",
         "095": "Telemach",
@@ -44,8 +49,8 @@ def rjecnik():
         "098": "Hrvatski Telekom",
         "099": "Hrvatski Telekom",
     }
-    spec = {
-        "0800":"Besplatni pozivi",
+    posebne = {
+        "0800": "Besplatni pozivi",
         "060": "Komercijalni pozivi",
         "061": "Glasovanje telefonom",
         "064": "Usluge s neprimjerenim sadržajem",
@@ -53,34 +58,41 @@ def rjecnik():
         "069": "Usluge namijenjene djeci",
         "072": "Jedinstveni pristupni broj za cijelu državu za posebne usluge",
     }
-    return fiks, mob, spec
+    return fiksne, mobilne, posebne
 
-def samo_brojevi(s: str) -> bool:
-    return len(s)>0 and all("0"<=c<="9" for c in s)
+def samo_brojevi(tekst: str) -> bool:
+    return len(tekst) > 0 and all("0" <= znak <= "9" for znak in tekst)
 
-def find_poz(b: str):
-    fiks, mob, spec = rjecnik()
-    svi = list(fiks)+list(mob)+list(spec)
-    svi.sort(key=len, reverse=True)
-    for p in svi:
-        if b.startswith(p):
-            if p in fiks: return p,"fiksna mreža",fiks[p],None
-            if p in mob:  return p,"mobilna mreža",None,mob[p]
-            if p in spec: return p,"posebne usluge",None,None
-    return None,None,None,None
+def pronadi_pozivni(nacionalni_broj: str):
+    fiksne, mobilne, posebne = rjecnik()
+    svi_prefiksi = list(fiksne) + list(mobilne) + list(posebne)
+    svi_prefiksi.sort(key=len, reverse=True)
+    for prefiks in svi_prefiksi:
+        if nacionalni_broj.startswith(prefiks):
+            if prefiks in fiksne:  return prefiks, "fiksna mreža", fiksne[prefiks], None
+            if prefiks in mobilne: return prefiks, "mobilna mreža", None, mobilne[prefiks]
+            if prefiks in posebne: return prefiks, "posebne usluge", None, None
+    return None, None, None, None
 
-def validiraj(broj: str) -> dict:
-    b = norm(broj)
-    poz, vrsta, mjesto, oper = find_poz(b)
-    if poz is None:
-        return {"pozivni_broj":None,"broj_ostatak":None,"vrsta":None,"mjesto":None,"operater":None,"validan":False}
-    ost = b[len(poz):]
-    if not samo_brojevi(ost):
-        return {"pozivni_broj":poz,"broj_ostatak":None,"vrsta":vrsta,"mjesto":mjesto,"operater":oper,"validan":False}
-    if vrsta in ("fiksna mreža","mobilna mreža"):
-        ok = len(ost) in (6,7)
+def validiraj(broj_telefona: str) -> dict:
+    nacionalni_broj = u_nacionalni(broj_telefona)
+    pozivni_broj, vrsta_mreze, mjesto, operater = pronadi_pozivni(nacionalni_broj)
+    if pozivni_broj is None:
+        return {"pozivni_broj": None, "broj_ostatak": None, "vrsta": None, "mjesto": None, "operater": None, "validan": False}
+    ostatak_broja = nacionalni_broj[len(pozivni_broj):]
+    if not samo_brojevi(ostatak_broja):
+        return {"pozivni_broj": pozivni_broj, "broj_ostatak": None, "vrsta": vrsta_mreze, "mjesto": mjesto, "operater": operater, "validan": False}
+    if vrsta_mreze in ("fiksna mreža", "mobilna mreža"):
+        ispravna_duljina = len(ostatak_broja) in (6, 7)
     else:
-        ok = len(ost)==6
-    return {"pozivni_broj":poz,"broj_ostatak":ost,"vrsta":vrsta,"mjesto":mjesto if vrsta=="fiksna mreža" else None,"operater":oper if vrsta=="mobilna mreža" else None,"validan":ok}
+        ispravna_duljina = len(ostatak_broja) == 6
+    return {
+        "pozivni_broj": pozivni_broj,
+        "broj_ostatak": ostatak_broja,
+        "vrsta": vrsta_mreze,
+        "mjesto": mjesto if vrsta_mreze == "fiksna mreža" else None,
+        "operater": operater if vrsta_mreze == "mobilna mreža" else None,
+        "validan": ispravna_duljina,
+    }
 
-print(validiraj(broj))
+print(validiraj(unos_broja))
