@@ -9,8 +9,6 @@ print(duljine_sa_slovom_a)
 kubovi = [{i: (i ** 3 if i % 2 != 0 else i)} for i in range(1, 11)]
 print(kubovi)
 
-
-
 korijeni = {x: round(math.sqrt(x), 2) for x in range(50, 501, 50)}
 print(korijeni)
 studenti = [
@@ -28,5 +26,4 @@ faktorijeli = {
     i: [math.factorial(j) for j in range(1, i + 1)]
     for i in range(1, 11)
 }
-
 print(faktorijeli)
